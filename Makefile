@@ -1,0 +1,3 @@
+.PHONY: gogen
+gogen: ## Generate auto-generated go files
+	go generate ./...
