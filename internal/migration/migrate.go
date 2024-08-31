@@ -26,7 +26,6 @@ func Migrate(db *gorm.DB) (init bool, err error) {
 		// table
 		return db.AutoMigrate(AllTables()...)
 	})
-	db.AutoMigrate(AllTables()...)
 	err = m.Migrate()
 	return
 }

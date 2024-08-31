@@ -6,13 +6,16 @@ import (
 	"time"
 
 	"github.com/hellskater/udhaar-backend/internal/repository"
-	"github.com/hellskater/udhaar-backend/internal/repository/gorm"
+	internalGorm "github.com/hellskater/udhaar-backend/internal/repository/gorm"
+	"github.com/hellskater/udhaar-backend/internal/router"
 	"github.com/hellskater/udhaar-backend/internal/service"
+	"github.com/hellskater/udhaar-backend/internal/service/books"
 	"github.com/hellskater/udhaar-backend/pkg/utils/gormzap"
 	"github.com/labstack/echo"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
+	"gorm.io/gorm"
 )
 
 func serveCommand() *cobra.Command {
@@ -20,11 +23,11 @@ func serveCommand() *cobra.Command {
 		Use:   "serve",
 		Short: "Start Udhaar API server",
 		Run: func(_ *cobra.Command, _ []string) {
-			// Logger
+			//----------------- Logger -----------------
 			logger := getLogger()
 			defer logger.Sync()
 
-			// Database
+			//----------------- Database -----------------
 			logger.Info("connecting database...")
 			engine, err := config.getDatabase()
 			if err != nil {
@@ -39,20 +42,21 @@ func serveCommand() *cobra.Command {
 			defer db.Close()
 			logger.Info("database connection was established")
 
-			// Repository
+			//----------------- Repository -----------------
 			logger.Info("setting up repository...")
-			repo, _, err := gorm.NewGormRepository(engine, logger, true)
+			repo, _, err := internalGorm.NewGormRepository(engine, logger, true)
 			if err != nil {
 				logger.Fatal("failed to initialize repository", zap.Error(err))
 			}
 			logger.Info("repository was set up")
 
-			// Server creation
+			//----------------- Server Creation -----------------
 			server, err := newServer(engine, repo, logger, &config)
 			if err != nil {
 				logger.Fatal("failed to create server", zap.Error(err))
 			}
 
+			//----------------- Start Server -----------------
 			go func() {
 				if err := server.Start(fmt.Sprintf(":%d", config.Port)); err != nil {
 					logger.Info("shutting down the server")
@@ -60,9 +64,12 @@ func serveCommand() *cobra.Command {
 			}()
 
 			logger.Info("udhaar started")
+
+			//----------------- Wait SIGINT -----------------
 			waitSIGINT()
 			logger.Info("udhaar shutting down...")
 
+			//----------------- Shutdown Server -----------------
 			ctx, cancel := context.WithTimeout(context.Background(), time.Duration(30)*time.Second)
 			defer cancel()
 			if err := server.Shutdown(ctx); err != nil {
@@ -72,6 +79,22 @@ func serveCommand() *cobra.Command {
 		},
 	}
 	return &cmd
+}
+
+func newServer(db *gorm.DB, repo repository.Repository, logger *zap.Logger, c *Config) (*Server, error) {
+	booksService := books.NewService(repo, logger)
+	services := &service.Services{
+		Books: booksService,
+	}
+	routerConfig := provideRouterConfig(c)
+	echo := router.Setup(db, repo, services, logger, routerConfig)
+	server := &Server{
+		L:      logger,
+		SS:     services,
+		Router: echo,
+		Repo:   repo,
+	}
+	return server, nil
 }
 
 type Server struct {

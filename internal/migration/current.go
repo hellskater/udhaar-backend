@@ -18,5 +18,10 @@ func Migrations() []*gormigrate.Migration {
 func AllTables() []interface{} {
 	return []interface{}{
 		&model.Group{},
+		&model.Participant{},
+		&model.Expense{},
+		&model.Activity{},
+		&model.Category{},
+		&model.ExpensePaidFor{},
 	}
 }

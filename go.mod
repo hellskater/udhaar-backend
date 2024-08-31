@@ -7,7 +7,6 @@ require (
 	github.com/go-gormigrate/gormigrate/v2 v2.1.2
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/gofrs/uuid v4.4.0+incompatible
-	github.com/google/wire v0.6.0
 	github.com/json-iterator/go v1.1.12
 	github.com/labstack/echo v3.3.10+incompatible
 	github.com/spf13/cobra v1.8.1

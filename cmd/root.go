@@ -49,6 +49,14 @@ func init() {
 		serveCommand(),
 		migrateCommand(),
 	)
+
+	flags := rootCommand.PersistentFlags()
+	flags.StringVarP(&configFile, "config", "c", "", "config file path")
+
+	flags.Bool("dev", false, "development mode")
+	bindPFlag(flags, "dev")
+	flags.Bool("pprof", false, "expose pprof http interface")
+	bindPFlag(flags, "pprof")
 }
 
 func Execute() error {

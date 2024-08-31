@@ -19,6 +19,21 @@ type Router struct {
 	v1 *v1.Handlers
 }
 
+func newRouter(db *gorm.DB, repo repository.Repository, ss *service.Services, logger *zap.Logger, config *Config) *Router {
+	echo := newEcho(logger, config, repo)
+	booksService := ss.Books
+	handlers := &v1.Handlers{
+		Books:  booksService,
+		Repo:   repo,
+		Logger: logger,
+	}
+	router := &Router{
+		e:  echo,
+		v1: handlers,
+	}
+	return router
+}
+
 func Setup(db *gorm.DB, repo repository.Repository, ss *service.Services, logger *zap.Logger, config *Config) *echo.Echo {
 	r := newRouter(db, repo, ss, logger.Named("router"), config)
 

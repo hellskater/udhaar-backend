@@ -1,7 +1,16 @@
 package repository
 
-import "github.com/hellskater/udhaar-backend/internal/model"
+import (
+	"github.com/gofrs/uuid"
+)
+
+type GroupWithParticipantCount struct {
+	ID               uuid.UUID `json:"id"`
+	Name             string    `json:"name"`
+	Currency         string    `json:"currency"`
+	ParticipantCount int       `json:"participantCount"`
+}
 
 type GroupRepository interface {
-	GetGroups() ([]*model.Group, error)
+	GetGroups(groupIds []uuid.UUID) ([]*GroupWithParticipantCount, error)
 }

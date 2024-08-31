@@ -35,7 +35,7 @@ func json(c echo.Context, code int, i interface{}, cfg jsonIter.API) error {
 	return stream.Flush()
 }
 
-// Wrap Custom Context Trapper
+// Wrap Custom Context wrapper
 func Wrap(repo repository.Repository) echo.MiddlewareFunc {
 	return func(n echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
